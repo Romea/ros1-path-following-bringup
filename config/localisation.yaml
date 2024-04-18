@@ -1,0 +1,40 @@
+odo:
+  restamping: true
+
+imu:
+  debug: true
+  imu:
+    rate: 100.
+    # linear_speed_epsilon: .005  # m/s
+
+gnss:
+  minimal_speed_over_ground_to_use_track_angle: 0.25  # m/s
+  # minimal_fix_quality: 4  # 4 = FIXED, 5 = FLOAT
+  minimal_fix_quality: 5  # 4 = FIXED, 5 = FLOAT
+  # course_mode: RMC  # possible values: [RMC, HDT, HRP]
+  course_mode: HDT  # possible values: [RMC, HDT, HRP]
+
+robot_localisation:
+  autostart: true
+  debug: true
+  display: true
+  rate: 20
+
+  filter:
+    state_pool_size: 1000
+    number_of_particle: 200
+  predictor:
+    maximal_dead_recknoning_travelled_distance: 100.
+    maximal_dead_recknoning_elapsed_time: 100.
+  angular_speed_updater:
+    minimal_rate: 10.0
+  linear_speeds_updater:
+    minimal_rate: 10.0
+  position_updater:
+    minimal_rate: 1.0
+    trigger: always
+  course_updater:
+    minimal_rate: 1.0
+    trigger: once
+  attitude_updater:
+    minimal_rate: 10.0

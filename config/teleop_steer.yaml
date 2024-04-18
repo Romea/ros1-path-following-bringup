@@ -1,0 +1,30 @@
+teleop:
+  slow:
+    type: topic
+    message_type: ackermann_msgs/AckermannDrive
+    topic_name: ~cmd_steer
+    deadman_buttons: [4]
+    axis_mappings:
+      -
+        axis: 1
+        target: speed
+        scale: 1.0
+      -
+        axis: 3
+        target: steering_angle
+        scale: 0.6
+
+  fast:
+    type: topic
+    message_type: ackermann_msgs/AckermannDrive
+    topic_name: ~cmd_steer
+    deadman_buttons: [5]
+    axis_mappings:
+      -
+        axis: 1
+        target: speed
+        scale: 3.0
+      -
+        axis: 3
+        target: steering_angle
+        scale: 0.7

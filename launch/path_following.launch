@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="demo"  default="live"/>
+  <arg name="model" default="fat" />
+  <arg name="config_dir" default="$(find path_following_demo)/config"/>
+  <arg name="autostart" default="0"/>
+  <arg name="world_name" default="worlds/empty.world"/>
+  <arg name="robot_initial_pose" default="-x 0 -y 0 -Y 0"/>
+
+  <arg name="self_launch_dir" value="$(find path_following_demo)/launch"/>
+
+  <include file="$(arg self_launch_dir)/common/pre.launch">
+    <arg name="config_dir" value="$(arg config_dir)"/>
+    <arg name="demo" value="$(arg demo)"/>
+    <arg name="output" value="log"/>
+    <arg name="world_name" value="$(arg world_name)"/>
+  </include>
+
+  <include file="$(arg self_launch_dir)/common/robot.launch">
+    <arg name="config_dir" value="$(arg config_dir)"/>
+    <arg name="demo" value="$(arg demo)"/>
+    <arg name="model" value="$(arg model)"/>
+    <arg name="robot_ns" value=""/>
+    <arg name="lidar_id" value="lidar2"/>
+    <arg if="$(eval optenv('ROBOT_INITIAL_POSE') != '')" name="robot_initial_pose" value="$(env ROBOT_INITIAL_POSE)"/>
+    <arg if="$(eval optenv('ROBOT_INITIAL_POSE') == '')" name="robot_initial_pose" value="$(arg robot_initial_pose)"/>
+  </include>
+
+  <!-- localisation and odometry -->
+  <include ns="localisation" file="$(arg self_launch_dir)/localisation_algo.launch">
+    <arg name="config_dir" value="$(arg config_dir)"/>
+    <arg name="demo" value="$(arg demo)"/>
+    <arg name="output" value="log"/>
+  </include>
+
+  <!-- path nodes -->
+  <!-- <group ns="path_following">
+    <include file="$(arg self_launch_dir)/path_following_algo.launch">
+      <arg name="config_dir" value="$(arg config_dir)"/>
+      <arg name="output" value="screen"/>
+    </include>
+  </group> -->
+
+  <node pkg="cmd_mux" type="cmd_mux" name="robot_cmd_mux" output="screen">
+    <remap from="cmd_steer_out" to="/auto/cmd_steer"/>
+    <rosparam command="load" file="$(arg config_dir)/robot_cmd_mux.yaml"/>
+  </node>
+
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find path_following_demo)/viz/demo.rviz"/>
+
+  <include file="$(arg self_launch_dir)/common/post.launch">
+    <arg name="demo" value="$(arg demo)"/>
+  </include>
+
+  <!-- <node name="static_tf_odom" pkg="tf2_ros" type="static_transform_publisher" -->
+  <!--   args="0 0 0  0 0 0  map odom"/> -->
+</launch>

@@ -1,0 +1,85 @@
+<launch>
+  <arg name="output" default="log" />
+  <arg name="robot_prefix" default="" />
+  <arg name="demo" default="live"/>
+  <arg name="config_dir"/>
+
+  <arg name="controller_prefix" value="$(eval robot_prefix if demo == 'simu' else '')"/>
+  <arg name="controller" value="$(arg controller_prefix)alpo_driver/ackermann_controller"/>
+
+  <rosparam command="load" file="$(arg config_dir)/localisation.yaml"/>
+
+  <remap from="vehicle_controller/odom" to="/$(arg controller)/odom"/>
+
+  <node name="odo_converter" pkg="romea_odo_converter" type="odo_converter_node" output="$(arg output)">
+    <remap from="joint_states" to="/$(arg controller_prefix)alpo_driver/joint_states"/>
+    <param name="robot/odometry/frame" value="2FWS2RWD"/>
+    <param name="robot/kinematic/maximal_wheel_acceleration" value="0.0"/>
+    <param name="robot/kinematic/maximal_wheel_angular_speed" value="0.0"/>
+    <param name="robot/odometry/wheel_speed_std" value="0.02"/>
+    <param name="robot/odometry/wheel_angle_std" value="0.01"/>
+
+    <remap from="~robot/kinematic/body_reference_x" to="/$(arg controller)/body/reference_x"/>
+    <remap from="~robot/chassis/wheel_radius/front" to="/$(arg controller)/wheel_radius"/>
+    <remap from="~robot/chassis/wheel_radius/rear" to="/$(arg controller)/wheel_radius"/>
+    <remap from="~robot/chassis/track/front" to="/$(arg controller)/track"/>
+    <remap from="~robot/chassis/track/rear" to="/$(arg controller)/track"/>
+    <remap from="~robot/chassis/hub_carrier_offset/front" to="/$(arg controller)/steering/hub_carrier_offset"/>
+    <remap from="~robot/chassis/hub_carrier_offset/rear" to="/$(arg controller)/steering/hub_carrier_offset"/>
+    <remap from="~robot/chassis/wheelbase" to="/$(arg controller)/wheelbase"/>
+    <remap from="~robot/kinematic/maximal_wheel_speed" to="/$(arg controller)/wheel/lin_speed_max"/>
+      <!-- <remap from="~robot/kinematic/maximal_wheel_angle" to="/$(arg controller)/steering/angle_max_in"/> -->
+    <param name="robot/kinematic/maximal_wheel_angle" value="0.93"/>
+
+    <remap from="vehicle_controller/kinematic" to="/$(arg controller)/kinematic"/>
+    <remap from="vehicle_controller/odometry" to="/$(arg controller)/odometry"/>
+
+    <rosparam subst_value="True">
+      front_left_steering_joint_name: $(arg controller_prefix)front_left_wheel_steering_joint
+      front_right_steering_joint_name: $(arg controller_prefix)front_right_wheel_steering_joint
+      rear_left_wheel_joint_name: $(arg controller_prefix)rear_left_wheel_spinning_joint
+      rear_right_wheel_joint_name: $(arg controller_prefix)rear_right_wheel_spinning_joint
+    </rosparam>
+  </node>
+
+  <node name="odo" pkg="romea_odo_localisation_plugin" type="odo_localisation_plugin_node" output="$(arg output)">
+    <remap from="vehicle_controller/kinematic" to="/$(arg controller)/kinematic"/>
+  </node>
+
+  <node name="imu" pkg="romea_imu_localisation_plugin" type="imu_localisation_plugin_node" output="$(arg output)">
+    <param name="bypass_bias_estimation" value="$(eval demo != 'live')"/>
+    <param name="linear_speed_epsilon" value="0.01"/>
+    <rosparam command="load" file="$(find romea_imu_description)/config/xsens_mti.yaml" ns="imu" />
+    <remap from="~imu/xyz" to="/$(arg robot_prefix)imu/xyz"/>
+    <remap from="~imu/rpy" to="/$(arg robot_prefix)imu/rpy"/>
+    <remap from="imu/data" to="/$(arg robot_prefix)imu/data"/>
+    <!-- <remap from="imu/data" to="/external/imu/data"/> -->
+  </node>
+
+  <node name="gnss" pkg="romea_gps_localisation_plugin" type="gps_localisation_plugin_node" output="$(arg output)">
+    <rosparam command="load" file="$(find romea_gps_description)/config/ashtech_proflex800_eure.yaml" ns="gps"/>
+    <param name="map_frame" value="$(arg robot_prefix)map"/>
+    <remap from="~gps/xyz" to="/$(arg robot_prefix)gnss/xyz"/>
+    <remap from="gps/nmea_sentence" to="/$(arg robot_prefix)gps/nmea_sentence"/>
+    <remap from="vehicle_controller/odom" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/odom"/>
+	  <remap from="~wgs84_anchor" to="/$(arg robot_prefix)gnss/wgs84_anchor"/>
+  </node>
+
+  <node name="robot_localisation" pkg="romea_robot_to_world_localisation" type="robot_to_world_kalman_localisation_node" output="$(arg output)">
+    <param name="base_footprint_frame" value="$(arg robot_prefix)base_footprint"/>
+    <param name="map_frame" value="$(arg robot_prefix)map"/>
+  </node>
+
+  <!--
+    <node name="map_to_odom_tf" pkg="romea_robot_to_world_localisation" type="map_to_odom_tf"
+      output="screen"/>
+  -->
+
+  <!-- <node name="path_recorder" pkg="romea_path_tools" type="record" output="screen">
+    <param name="output" value="$(arg config_dir)/paths/recorded.traj"/>
+    <param name="coordinate_system" value="WGS84"/>
+
+    <remap from="odom" to="filtered_odom"/>
+    <remap from="~anchor" to="/$(arg robot_prefix)gnss/wgs84_anchor"/>
+  </node> -->
+</launch>

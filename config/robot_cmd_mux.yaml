@@ -1,0 +1,20 @@
+topics_vel: []
+
+topics_steer:
+  -
+    name    : control_fsm_steer
+    topic   : control_fsm/cmd_steer
+    timeout : 0.5
+    priority: 20
+  -
+    name    : emergency_steer
+    topic   : emergency_stop/cmd_steer
+    timeout : 0.5
+    priority: 255
+  -
+    name    : joystick_steer
+    topic   : teleop/cmd_steer
+    timeout : 0.3
+    priority: 100
+
+locks: []

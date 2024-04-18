@@ -1,0 +1,46 @@
+<launch>
+  <arg name="path"/>
+  <arg name="config_dir"/>
+  <arg name="output" default="log" />
+  <arg name="robot_prefix" default="" />
+  <arg name="controller_prefix" default="" />
+
+  <node name="path_matching" pkg="romea_path_matching" type="path_matching_node" output="$(arg output)">
+    <remap from="filtered_odom" to="/$(arg robot_prefix)localisation/filtered_odom"/>
+    <param name="path_dir" value="$(arg config_dir)/paths"/>
+    <rosparam command="load" file="$(arg config_dir)/path_matching.yaml"/>
+  </node>
+
+  <node name="path_following" pkg="romea_path_following" type="path_following_node" output="$(arg output)">
+    <remap from="joy" to="/null/joy"/>
+    <!-- <remap from="joy" to="/$(arg robot_prefix)joy"/> -->
+
+    <!-- <remap from="~cmd_steer" to="/$(arg controller_prefix)auto/cmd_steer"/> -->
+    <!-- <remap from="vehicle_controller/kinematic" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/kinematic"/> -->
+    <remap from="~robot/vehicle_controller/odometry" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/odometry"/>
+
+    <param name="robot/odometry/frame" value="2FWS2RWD"/>
+    <param name="robot/kinematic/body_reference_x" value="0.0"/>
+    <param name="robot/kinematic/maximal_wheel_acceleration" value="0.0"/>
+    <param name="robot/kinematic/maximal_wheel_angular_speed" value="0.0"/>
+    <param name="robot/odometry/wheel_speed_std" value="0.1"/>
+    <param name="robot/odometry/wheel_angle_std" value="0.01"/>
+    <param name="robot/kinematic/z_inertial_moment" value="0.0"/>
+
+    <remap from="~robot/chassis/wheel_radius/front" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/wheel_radius"/>
+    <remap from="~robot/chassis/wheel_radius/rear" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/wheel_radius"/>
+    <remap from="~robot/chassis/track/front" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/track"/>
+    <remap from="~robot/chassis/track/rear" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/track"/>
+    <remap from="~robot/chassis/hub_carrier_offset/front" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/steering/hub_carrier_offset"/>
+    <remap from="~robot/chassis/hub_carrier_offset/rear" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/steering/hub_carrier_offset"/>
+    <remap from="~robot/chassis/wheelbase" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/wheelbase"/>
+    <remap from="~robot/chassis/mass" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/mass"/>
+    <remap from="~robot/chassis/mass_center_position" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/mass_center_position"/>
+    <remap from="~robot/kinematic/maximal_wheel_speed" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/wheel/lin_speed_max"/>
+    <!-- <remap from="~robot/kinematic/maximal_wheel_angle" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/steering/angle_max_in"/> -->
+    <param name="robot/kinematic/maximal_wheel_angle" value="0.93"/>
+    <remap from="~robot/vehicle_controller/type" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/type"/>
+
+    <rosparam command="load" file="$(arg config_dir)/path_following.yaml"/>
+  </node>
+</launch>

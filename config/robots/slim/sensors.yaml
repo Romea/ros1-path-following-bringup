@@ -1,0 +1,54 @@
+gnss:
+  enable: true
+  # xyz: [-0.0518, -0.0018, 1.9114]  # Drotek, Mesured using the Faro
+  xyz: [-0.015, 0, 1.93]  # Septentrio, new position
+  # xyz: [-0.015416, -0.5100, 1.9676]  # Septentrio, mesured using the Faro
+  # wgs84_anchor: [45.76345967, 3.10955017, 351.9] # inrae, near the hedge at the north
+  # wgs84_anchor: [45.7628471, 3.1102953, 402.009] # inrae
+  # wgs84_anchor: [45.76285, 3.1101945, 360.] # inrae
+  # wgs84_anchor: [45.7629343, 3.110583, 360.] # cézeaux (demo innoscan)
+  # wgs84_anchor: [46.339207, 3.4352765, 327.2]  # montoldre coop, simu vineyard
+  # wgs84_anchor: [45.76345967, 3.10955017, 351.9] # cézeaux
+  # wgs84_anchor: [43.536585365, 1.494879002, 150.9] # fira 2023
+  # wgs84_anchor: [46.3392512, 3.4334815, 279.925]  # montoldre coop uturn
+  # wgs84_anchor: [45.85207 , 3.16482, 300.0]  # SabiAgri edge
+  # wgs84_anchor: [45.850975538, 3.165519238, 400.0] # sabi agri (local)
+  # wgs84_anchor: [46.3393175, 3.4333328, 280.05]  # montoldre coop uturn demo
+  # wgs84_anchor: [46.339159 , 3.433923, 278.142]  # montoldre cross center
+  # wgs84_anchor:  [45.762875, 3.110256, 402.117] # cézeaux line
+  # wgs84_anchor: [46.3390931, 3.4336091, 279.202] # montoldre demo
+  # wgs84_anchor: [ 46.3394379, 3.4345858, 280.398 ] # montoldre demo ministre
+  # wgs84_anchor: [46.34040128617079, 3.4368485453323507, 279.202] # montoldre double_plot
+  # wgs84_anchor: [ 46.3403701, 3.4368389, 0.0 ] # montoldre paul field
+  # wgs84_anchor: [ 46.3399861, 3.4341275, 300.0 ] # marwen test_C.traj
+  wgs84_anchor: [45.76271353004852, 3.110423089575725, 0.0]  # cezeaux uturn 3
+
+lidar: # furrow
+  enable: false
+  config: sick_lms1xx_50hz
+  # xyz: [1.95, 0, 1.97]
+  # rpy: [0, 0.806, 0]
+  xyz: [3.135, 0.0137, 0.653]
+  rpy: [0, 0.6108, 0]
+
+imu:
+  enable: true
+  xyz: [0.155, 0.018, 0.625]
+  rpy: [0, 0, 0]
+
+lidar2: # edge
+  enable: true
+  # config: sick_lms1xx_50hz
+  config: sick_mrs1000
+  # config: sick_mrs6000
+  xyz: [3.135, 0.0137, 0.653]
+  rpy: [0, 0.04363323125, 0]
+
+lidar_mrs:
+  enable: false
+  config: sick_mrs1000
+  xyz: [3.20, 0, 0.58]
+  rpy: [0, 0, 0]
+
+camera:
+  enable: false

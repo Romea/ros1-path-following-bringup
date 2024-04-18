@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="demo"/>
+  <arg name="model"/>
+  <arg name="config_dir" default="$(find path_following_demo)/config"/>
+  <arg name="robot_ns" default=""/>
+  <arg name="joy_type" default="xbox"/>
+  <arg name="joy_device" default="/dev/input/js0"/>
+  <arg name="robot_initial_pose" default="-y -1.5 -Y 0"/>
+  <arg name="urdf_path" default="$(find alpo_description)/urdf/tractor.urdf.xacro"/>
+  <arg name="lidar_id" default="lidar" doc="possible value: [lidar, lidar2]"/>
+
+  <arg name="alpo_cfg_path" value="$(find alpo_description)/config/$(arg model)"/>
+  <arg name="tractor_conf_path" value="$(arg alpo_cfg_path)/tractor.yaml"/>
+  <arg name="sensors_conf_path" value="$(arg config_dir)/robots/$(arg model)/sensors.yaml"/>
+  <arg name="implements_conf_path" value="$(arg config_dir)/robots/$(arg model)/implements.yaml"/>
+
+  <arg name="robot_prefix" value="$(eval robot_ns + '/' if robot_ns else '')"/>
+
+  <!-- <node pkg="tf" type="static_transform_publisher" name="base_link_to_lidar_link" args="1.82 0 1.72 0 0.45379 0.0 base_link lidar_link 100"/>-->
+
+  <group ns="/$(arg robot_ns)">
+    <rosparam command="load" file="$(arg sensors_conf_path)" />
+  </group>
+
+  <group if="$(eval demo == 'replay')">
+    <param name="/use_sim_time" value="true" type="bool"/>
+    <rosparam command="load" file="$(arg tractor_conf_path)" ns="alpo_driver/ackermann_controller"/>
+    <rosparam command="load" file="$(find alpo_control)/config/control.yaml" ns="alpo_driver"/>
+
+    <!-- publish static tfs of the tractor -->
+    <include ns="alpo_driver" file="$(find alpo_description)/launch/description.launch">
+      <arg name="urdf_path" value="$(arg urdf_path) prefix:=$(arg robot_prefix)"/>
+      <arg name="params" value="robot_prefix:=$(arg robot_prefix) tractor_conf_path:=$(arg tractor_conf_path) sensors_conf_path:=$(arg sensors_conf_path) implements_conf_path:=$(arg implements_conf_path)"/>
+    </include>
+
+    <node ns="gps" name="nmea_topic_driver" pkg="nmea_navsat_driver" type="nmea_topic_driver">
+      <param name="useRMC" value="True" />
+    </node>
+
+    <node pkg="joy" type="joy_node" name="external_joy">
+      <param name="dev" value="$(arg joy_device)"/>
+      <param name="autorepeat_rate" value="10"/>
+      <!-- <remap from="/$(arg robot_prefix)joy" to="/external/joy"/> -->
+      <remap from="/joy" to="/external/joy"/>
+    </node>
+  </group>
+
+  <group if="$(eval demo == 'live')">
+    <include file="$(find path_following_demo)/launch/common/sensors.launch">
+      <arg name="lidar_id" value="$(arg lidar_id)"/>
+      <arg name="robot_ns" value="$(arg robot_ns)"/>
+    </include>
+
+    <include file="$(find cylinder_interface)/launch/default.launch"/>
+    <node name="cylinder_fsm" pkg="path_following_demo" type="cylinder_fsm">
+      <remap from="~command" to="/cylinder/rear/interface/command"/>
+    </node>
+
+    <rosparam command="load" file="$(arg tractor_conf_path)" ns="alpo_driver/ackermann_controller"/>
+    <rosparam command="load" file="$(find alpo_control)/config/control.yaml" ns="alpo_driver"/>
+
+    <!-- publish static tfs of the tractor -->
+    <include ns="alpo_driver" file="$(find alpo_description)/launch/description.launch">
+      <arg name="urdf_path" value="$(arg urdf_path) prefix:=$(arg robot_prefix)"/>
+      <arg name="params" value="robot_prefix:=$(arg robot_prefix) tractor_conf_path:=$(arg tractor_conf_path) sensors_conf_path:=$(arg sensors_conf_path) implements_conf_path:=$(arg implements_conf_path)"/>
+    </include>
+
+    <!-- <group if="$(eval joy_type == 'xbox')"> -->
+    <group if="1">
+      <node pkg="joy" type="joy_node" name="joy">
+        <param name="dev" value="$(arg joy_device)"/>
+        <param name="autorepeat_rate" value="10"/>
+        <remap from="/joy" to="/external/joy"/>
+      </node>
+
+      <!--
+        <rosparam command="load" file="$(arg config_dir)/teleop_twist.yaml"/>
+        <node pkg="teleop_twist_joy" type="teleop_node" name="teleop" output="log">
+          <remap from="/$(arg robot_prefix)joy" to="/external/joy"/>
+          <remap from="cmd_vel" to="/leader/auto/vision/cmd_vel"/>
+          &#60;&#33;&#45;&#45; <remap from="cmd_vel" to="/auto/vision/cmd_vel"/> &#45;&#45;&#62;
+        </node>
+      -->
+
+      <rosparam command="load" file="$(arg config_dir)/teleop_steer.yaml"/>
+      <node pkg="joy_teleop" type="joy_teleop.py" name="teleop" output="log">
+        <remap from="/joy" to="/external/joy"/>
+        <remap from="~cmd_steer" to="/auto/cmd_steer"/>
+      </node>
+    </group>
+  </group>
+
+  <group if="$(eval demo == 'simu')">
+    <include file="$(find alpo_gazebo)/launch/spawn.launch">
+      <arg name="robot_ns" value="$(arg robot_ns)" />
+      <arg name="robot_initial_pose" value="$(arg robot_initial_pose)"/>
+      <arg name="urdf_path" value="$(arg urdf_path)"/>
+      <arg name="params" value="tractor_conf_path:=$(arg tractor_conf_path) sensors_conf_path:=$(arg sensors_conf_path) implements_conf_path:=$(arg implements_conf_path) robot_prefix:=$(arg robot_prefix)"/>
+      <arg name="model" value="$(arg model)"/>
+    </include>
+
+    <rosparam command="load" file="$(arg tractor_conf_path)" ns="alpo_driver/ackermann_controller"/>
+
+    <group if="$(eval joy_type == 'xbox')">
+      <node pkg="joy" type="joy_node" name="joy">
+        <param name="dev" value="$(arg joy_device)"/>
+        <param name="autorepeat_rate" value="4"/>
+      </node>
+    </group>
+
+    <group if="$(eval joy_type == 'ps4')">
+      <include file="$(find ds4_driver)/launch/ds4_driver.launch">
+        <arg name="use_standard_msgs" value="true"/>
+      </include>
+    </group>
+
+    <!--
+      <rosparam command="load" file="$(arg config_dir)/teleop_twist.yaml"/>
+      <node pkg="teleop_twist_joy" type="teleop_node" name="teleop" output="log">
+      <remap from="cmd_vel" to="teleop/cmd_vel"/>
+      </node>
+    -->
+    <rosparam command="load" file="$(arg config_dir)/teleop_steer.yaml"/>
+    <node pkg="joy_teleop" type="joy_teleop.py" name="teleop" output="log">
+    </node>
+  </group>
+
+  <param name="alpo_driver/ackermann_controller/body/reference_x" value="-1.0"/>
+</launch>
