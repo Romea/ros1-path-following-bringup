@@ -1,17 +1,18 @@
 <launch>
   <arg name="path"/>
   <arg name="config_dir"/>
-  <arg name="output" default="log" />
+  <arg name="output" default="screen" />
   <arg name="robot_prefix" default="" />
   <arg name="controller_prefix" default="" />
 
-  <node name="path_matching" pkg="romea_path_matching" type="path_matching_node" output="$(arg output)">
+  <rosparam command="load" file="$(arg config_dir)/path_following.yaml"/>
+
+  <node name="matching" pkg="romea_path_matching" type="path_matching_node" output="$(arg output)">
     <remap from="filtered_odom" to="/$(arg robot_prefix)localisation/filtered_odom"/>
     <param name="path_dir" value="$(arg config_dir)/paths"/>
-    <rosparam command="load" file="$(arg config_dir)/path_matching.yaml"/>
   </node>
 
-  <node name="path_following" pkg="romea_path_following" type="path_following_node" output="$(arg output)">
+  <node if="0" name="following" pkg="romea_path_following" type="path_following_node" output="$(arg output)">
     <remap from="joy" to="/null/joy"/>
     <!-- <remap from="joy" to="/$(arg robot_prefix)joy"/> -->
 
@@ -40,7 +41,5 @@
     <!-- <remap from="~robot/kinematic/maximal_wheel_angle" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/steering/angle_max_in"/> -->
     <param name="robot/kinematic/maximal_wheel_angle" value="0.93"/>
     <remap from="~robot/vehicle_controller/type" to="/$(arg controller_prefix)alpo_driver/ackermann_controller/type"/>
-
-    <rosparam command="load" file="$(arg config_dir)/path_following.yaml"/>
   </node>
 </launch>

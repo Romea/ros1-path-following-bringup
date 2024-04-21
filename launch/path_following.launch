@@ -34,12 +34,12 @@
   </include>
 
   <!-- path nodes -->
-  <!-- <group ns="path_following">
+  <group ns="path_following">
     <include file="$(arg self_launch_dir)/path_following_algo.launch">
       <arg name="config_dir" value="$(arg config_dir)"/>
       <arg name="output" value="screen"/>
     </include>
-  </group> -->
+  </group>
 
   <node pkg="cmd_mux" type="cmd_mux" name="robot_cmd_mux" output="screen">
     <remap from="cmd_steer_out" to="/auto/cmd_steer"/>
