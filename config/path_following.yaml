@@ -17,7 +17,7 @@ matching:
 
 following:
   autoconfigure: true
-  autostart: false
+  autostart: true
   debug: true
 
   base:
