@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+import math
+from dataclasses import dataclass
+import copy
+
+import rospy
+from nav_msgs.msg import Path
+from tf.transformations import quaternion_from_euler
+from geometry_msgs.msg import PoseStamped
+
+@dataclass
+class RobotState:
+    x: float = 0
+    y: float = 0
+    theta: float = 0
+    t: float = 0
+
+
+def move(state: RobotState, lin_vel: float, ang_vel: float):
+    state.x += lin_vel * math.cos(state.theta) 
+    state.y += lin_vel * math.sin(state.theta) 
+    state.theta += ang_vel
+    state.t += 1
+
+
+def make_pose(state: RobotState):
+    ps = PoseStamped()
+    orientation = ps.pose.orientation
+    position = ps.pose.position
+
+    q = quaternion_from_euler(0, 0, state.theta)
+    orientation.w = q[3]
+    orientation.x = q[0]
+    orientation.y = q[1]
+    orientation.z = q[2]
+
+    position.x = state.x
+    position.y = state.y
+
+    return ps
+    
+
+def create_test_path():
+    path = Path()
+    poses = path.poses
+
+    path.header.frame_id = 'map'
+
+    state = RobotState()
+    poses.append(make_pose(state))
+
+    for i in range(20):
+        move(state, 1., 0.04)
+        poses.append(make_pose(state))
+
+    for i in range(10):
+        move(state, -1., 0.3)
+        poses.append(make_pose(state))
+
+    for i in range(20):
+        move(state, 1., 0.06)
+        poses.append(make_pose(state))
+
+    return path
+
+
+def main():
+    rospy.init_node('publish_path', anonymous=True)
+    pub = rospy.Publisher('path', Path, queue_size=1, latch=True)
+    path = create_test_path()
+    pub.publish(path)
+    rospy.spin()
+
+
+if __name__ == '__main__':
+    main()
