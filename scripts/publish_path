@@ -46,19 +46,19 @@ def create_test_path():
 
     path.header.frame_id = 'map'
 
-    state = RobotState()
+    state = RobotState(x=-1)
     poses.append(make_pose(state))
 
-    for i in range(20):
-        move(state, 1., 0.04)
-        poses.append(make_pose(state))
-
-    for i in range(10):
-        move(state, -1., 0.3)
+    for i in range(50):
+        move(state, 0.2, 0.02)
         poses.append(make_pose(state))
 
     for i in range(20):
-        move(state, 1., 0.06)
+        move(state, -0.2, 0.06)
+        poses.append(make_pose(state))
+
+    for i in range(50):
+        move(state, 0.2, 0.02)
         poses.append(make_pose(state))
 
     return path
